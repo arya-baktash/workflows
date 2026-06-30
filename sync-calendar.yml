@@ -2,20 +2,23 @@ name: Sync Forex Calendar
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # هر ۶ ساعت یکبار
-  workflow_dispatch:        # امکان اجرای دستی
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch and send data
-        run: |
-          curl -s -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" \
-               -H "Referer: https://www.forexfactory.com/calendar" \
-               https://nfs.faireconomy.media/ff_calendar_thisweek.json -o calendar.json
-          
-          curl -X POST "https://YOUR_BASE44_API_ENDPOINT" \
-               -H "Content-Type: application/json" \
-               -H "Authorization: Bearer ${{ secrets.BASE44_API_KEY }}" \
-               --data @calendar.json
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run sync script
+        env:
+          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
+        run: node scripts/sync-calendar.js
